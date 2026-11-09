@@ -71,7 +71,7 @@
     
     <!-- Header info count -->
     <div class="flex items-center justify-between mb-5">
-      <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider" id="toolsCountText">1 Tool</span>
+      <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider" id="toolsCountText">0 Tool</span>
     </div>
 
     <!-- Grid Cards -->
@@ -92,7 +92,7 @@
   <footer class="border-t border-slate-800/60 py-4 text-center text-xs text-slate-500">
     <div class="max-w-5xl mx-auto px-4 flex items-center justify-between">
       <span>My Tools Launcher</span>
-      <span class="text-[11px] text-slate-500">Tự động lưu trên trình duyệt</span>
+      <span class="text-[11px] text-slate-500">Tự động cập nhật logo & lưu trên trình duyệt</span>
     </div>
   </footer>
 
@@ -113,13 +113,28 @@
         <!-- Name -->
         <div>
           <label class="block text-xs font-medium text-slate-300 mb-1">Tên Tool <span class="text-rose-400">*</span></label>
-          <input type="text" id="toolName" required placeholder="VD: Office Info Editor" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-blue-500 transition">
+          <input type="text" id="toolName" required placeholder="VD: UyOffice Info" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-blue-500 transition">
         </div>
 
         <!-- URL -->
         <div>
           <label class="block text-xs font-medium text-slate-300 mb-1">Đường dẫn Web (URL) <span class="text-rose-400">*</span></label>
           <input type="url" id="toolUrl" required placeholder="https://..." class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-blue-500 transition">
+        </div>
+
+        <!-- Logo / Icon URL -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-medium text-slate-300">Logo / Icon (Tùy chọn)</label>
+            <span class="text-[10px] text-slate-500">Tự nhận diện hoặc dán link ảnh</span>
+          </div>
+          <div class="flex gap-2">
+            <input type="text" id="toolIcon" placeholder="https://.../logo.svg hoặc để trống để tự tìm" class="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-blue-500 transition">
+            <button type="button" id="detectLogoBtn" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-[11px] font-medium transition flex items-center gap-1" title="Tự động kiểm tra và điền logo từ URL">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+              <span>Tìm Logo</span>
+            </button>
+          </div>
         </div>
 
         <!-- Short Description -->

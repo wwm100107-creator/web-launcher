@@ -1,16 +1,24 @@
 /**
- * My Tools Launcher — Minimalist & Fast
+ * My Tools Launcher — Minimalist & Smart Logo Resolver
  */
 
-const STORAGE_KEY = "my_launcher_tools_v2";
+const STORAGE_KEY = "my_launcher_tools_v3";
 
-// Chỉ giữ lại đúng tool của bạn
+// Cấu hình mặc định với logo SVG gốc của từng trang web
 const DEFAULT_TOOLS = [
   {
     id: "tool-office-info-editor",
-    name: "Office Info Editor",
+    name: "UyOffice Info",
     url: "https://office-info-editor.vercel.app/",
+    icon: "https://office-info-editor.vercel.app/logo.svg",
     desc: "Công cụ chỉnh sửa và quản lý thông tin văn phòng trực tuyến"
+  },
+  {
+    id: "tool-universal-converter",
+    name: "UyConvert Pro",
+    url: "https://universal-converter-liard.vercel.app/",
+    icon: "https://universal-converter-liard.vercel.app/favicon.svg",
+    desc: "Chuyển đổi định dạng đuôi của ảnh, video, file,..."
   }
 ];
 
@@ -26,8 +34,27 @@ function init() {
 
 function loadTools() {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    tools = saved ? JSON.parse(saved) : DEFAULT_TOOLS;
+    // Check v3 or migrate from previous v2
+    const savedV3 = localStorage.getItem(STORAGE_KEY);
+    const savedV2 = localStorage.getItem("my_launcher_tools_v2");
+    const raw = savedV3 || savedV2;
+
+    tools = raw ? JSON.parse(raw) : DEFAULT_TOOLS;
+
+    // Tự động cập nhật logo gốc chuẩn cho các web hiện có
+    tools.forEach(t => {
+      const url = (t.url || "").toLowerCase();
+      if (url.includes("office-info-editor.vercel.app")) {
+        t.name = t.name || "UyOffice Info";
+        t.icon = "https://office-info-editor.vercel.app/logo.svg";
+      } else if (url.includes("universal-converter-liard.vercel.app") || url.includes("universal-converter")) {
+        t.name = t.name || "UyConvert Pro";
+        t.icon = "https://universal-converter-liard.vercel.app/favicon.svg";
+      }
+    });
+
+    // Lưu lại v3
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tools));
   } catch (e) {
     tools = DEFAULT_TOOLS;
   }
@@ -38,13 +65,34 @@ function saveTools() {
   render();
 }
 
-function getFaviconUrl(url) {
-  try {
-    const parsed = new URL(url);
-    return `https://www.google.com/s2/favicons?domain=${parsed.hostname}&sz=64`;
-  } catch (e) {
-    return null;
+// Lấy danh sách các đường dẫn logo tiềm năng (thử lần lượt, tuyệt đối không dùng Google s2 hình mặt trăng)
+function getIconCandidates(tool) {
+  const candidates = [];
+  if (tool.icon && tool.icon.trim() !== "") {
+    candidates.push(tool.icon.trim());
   }
+
+  try {
+    const parsed = new URL(tool.url);
+    const origin = parsed.origin;
+
+    // Đoán các link logo thường gặp trên web hiện đại
+    const commonPaths = [
+      `${origin}/logo.svg`,
+      `${origin}/favicon.svg`,
+      `${origin}/icon.svg`,
+      `${origin}/favicon.ico`,
+      `${origin}/apple-touch-icon.png`
+    ];
+
+    commonPaths.forEach(p => {
+      if (!candidates.includes(p)) {
+        candidates.push(p);
+      }
+    });
+  } catch (e) {}
+
+  return candidates;
 }
 
 function formatDomain(url) {
@@ -55,6 +103,33 @@ function formatDomain(url) {
     return url;
   }
 }
+
+// Xử lý khi ảnh logo tải thất bại -> tự động thử đường dẫn tiếp theo, nếu hết thì hiện chữ cái đại diện đẹp mắt
+window.handleIconError = function(img, candidatesJson, toolName) {
+  let candidates = [];
+  try {
+    candidates = JSON.parse(decodeURIComponent(candidatesJson));
+  } catch (e) {}
+
+  const currentIdx = parseInt(img.dataset.idx || "0", 10);
+  const nextIdx = currentIdx + 1;
+
+  if (candidates && nextIdx < candidates.length) {
+    img.dataset.idx = nextIdx;
+    img.src = candidates[nextIdx];
+  } else {
+    // Nếu tất cả các link đều không có ảnh: Hiển thị avatar chữ cái gradient chuyên nghiệp
+    const initial = (toolName || "T").trim().charAt(0).toUpperCase();
+    const parent = img.parentElement;
+    if (parent) {
+      parent.innerHTML = `
+        <div class="w-full h-full rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center font-bold text-xs text-white shadow-inner">
+          ${initial}
+        </div>
+      `;
+    }
+  }
+};
 
 function render() {
   const toolsGrid = document.getElementById("toolsGrid");
@@ -82,7 +157,9 @@ function render() {
   emptyState.classList.add("hidden");
 
   toolsGrid.innerHTML = filtered.map(tool => {
-    const favicon = getFaviconUrl(tool.url);
+    const candidates = getIconCandidates(tool);
+    const initialSrc = candidates.length > 0 ? candidates[0] : "";
+    const candidatesAttr = encodeURIComponent(JSON.stringify(candidates));
     const domain = formatDomain(tool.url);
 
     return `
@@ -91,11 +168,15 @@ function render() {
           <!-- Header Card: Icon, Title, Actions -->
           <div class="flex items-start justify-between gap-3">
             <div class="flex items-center gap-3 min-w-0">
-              <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center p-1.5 flex-shrink-0">
+              <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center p-1.5 flex-shrink-0 overflow-hidden">
                 ${
-                  favicon
-                    ? `<img src="${favicon}" alt="${tool.name}" class="w-6 h-6 object-contain rounded" onerror="this.onerror=null; this.parentElement.innerHTML='<i data-lucide=&quot;globe&quot; class=&quot;w-5 h-5 text-blue-400&quot;></i>'; lucide.createIcons();">`
-                    : `<i data-lucide="globe" class="w-5 h-5 text-blue-400"></i>`
+                  initialSrc
+                    ? `<img src="${initialSrc}" alt="${tool.name}" class="w-full h-full object-contain rounded-lg" data-idx="0" onerror="handleIconError(this, '${candidatesAttr}', '${tool.name.replace(/'/g, "\\'")}')">`
+                    : `
+                      <div class="w-full h-full rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-xs text-white">
+                        ${(tool.name || "T").charAt(0).toUpperCase()}
+                      </div>
+                    `
                 }
               </div>
               <div class="min-w-0">
@@ -166,6 +247,7 @@ window.editTool = function(id) {
   document.getElementById("toolId").value = tool.id;
   document.getElementById("toolName").value = tool.name;
   document.getElementById("toolUrl").value = tool.url;
+  document.getElementById("toolIcon").value = tool.icon || "";
   document.getElementById("toolDesc").value = tool.desc || "";
 
   document.getElementById("toolModal").classList.remove("hidden");
@@ -186,9 +268,36 @@ function setupEvents() {
     document.getElementById("toolId").value = "";
     document.getElementById("toolName").value = "";
     document.getElementById("toolUrl").value = "";
+    document.getElementById("toolIcon").value = "";
     document.getElementById("toolDesc").value = "";
     modal.classList.remove("hidden");
     document.getElementById("toolName").focus();
+  });
+
+  // Button tự động tìm Logo trong modal
+  document.getElementById("detectLogoBtn").addEventListener("click", () => {
+    const urlInput = document.getElementById("toolUrl");
+    const iconInput = document.getElementById("toolIcon");
+    const rawUrl = urlInput.value.trim();
+
+    if (!rawUrl) {
+      alert("Vui lòng nhập đường dẫn URL trước khi tìm logo!");
+      urlInput.focus();
+      return;
+    }
+
+    try {
+      const u = new URL(rawUrl);
+      if (rawUrl.includes("office-info-editor")) {
+        iconInput.value = `${u.origin}/logo.svg`;
+      } else if (rawUrl.includes("universal-converter")) {
+        iconInput.value = `${u.origin}/favicon.svg`;
+      } else {
+        iconInput.value = `${u.origin}/logo.svg`;
+      }
+    } catch (e) {
+      alert("Đường dẫn URL không hợp lệ!");
+    }
   });
 
   // Close Modal
@@ -202,6 +311,7 @@ function setupEvents() {
     const id = document.getElementById("toolId").value;
     const name = document.getElementById("toolName").value.trim();
     const url = document.getElementById("toolUrl").value.trim();
+    const icon = document.getElementById("toolIcon").value.trim();
     const desc = document.getElementById("toolDesc").value.trim();
 
     if (!name || !url) return;
@@ -212,6 +322,7 @@ function setupEvents() {
       if (tool) {
         tool.name = name;
         tool.url = url;
+        tool.icon = icon;
         tool.desc = desc;
       }
     } else {
@@ -220,6 +331,7 @@ function setupEvents() {
         id: "tool-" + Date.now(),
         name,
         url,
+        icon,
         desc
       });
     }
