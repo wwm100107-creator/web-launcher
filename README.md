@@ -1,10 +1,10 @@
-# 🚀 DevLaunch — Personal Web & Tool Launcher
+# DevLaunch — Personal Web & Tool Launcher
 
 Một giao diện trung tâm điều khiển (Personal Portal / Web Launcher) hiện đại, siêu nhẹ, giúp bạn quản lý tập trung toàn bộ các tool web, server localhost, dự án khách hàng và tiện ích phát triển hàng ngày.
 
 ---
 
-## ✨ Điểm nổi bật & Tính năng
+## Điểm nổi bật & Tính năng
 
 1. **Giao diện hiện đại (Bento Grid & Glassmorphism):**
    - Tông màu Dark Mode chuẩn developer, hiệu ứng ánh sáng mượt mà.
@@ -30,7 +30,7 @@ Một giao diện trung tâm điều khiển (Personal Portal / Web Launcher) hi
 
 ---
 
-## 💻 Cách sử dụng
+## Cách sử dụng
 
 ### Cách 1: Chạy trực tiếp (Không cần cài đặt)
 Chỉ cần mở thư mục:
@@ -56,7 +56,7 @@ Vì đây là Web tĩnh hoàn toàn (Static Web App), bạn có thể:
 
 ---
 
-## ⌨️ Bảng phím tắt nhanh
+## Bảng phím tắt nhanh
 
 | Phím tắt | Chức năng |
 | :--- | :--- |
